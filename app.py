@@ -19,18 +19,26 @@ st.sidebar.header("🔍 Filtros")
 # Filtro de Ano
 anos_disponiveis = sorted(df['ano'].unique())
 anos_selecionados = st.sidebar.multiselect("Ano", anos_disponiveis, default=anos_disponiveis)
+if not anos_selecionados:
+    anos_selecionados = anos_disponiveis
 
 # Filtro de Senioridade
 senioridades_disponiveis = sorted(df['senioridade'].unique())
 senioridades_selecionadas = st.sidebar.multiselect("Senioridade", senioridades_disponiveis, default=senioridades_disponiveis)
+if not senioridades_selecionadas:
+    senioridades_selecionadas = senioridades_disponiveis
 
 # Filtro por Tipo de Contrato
 contratos_disponiveis = sorted(df['contrato'].unique())
 contratos_selecionados = st.sidebar.multiselect("Tipo de Contrato", contratos_disponiveis, default=contratos_disponiveis)
+if not contratos_selecionados:
+    contratos_selecionados = contratos_disponiveis
 
 # Filtro por Tamanho da Empresa
 tamanhos_disponiveis = sorted(df['tamanho_empresa'].unique())
 tamanhos_selecionados = st.sidebar.multiselect("Tamanho da Empresa", tamanhos_disponiveis, default=tamanhos_disponiveis)
+if not tamanhos_selecionados:
+    tamanhos_selecionados = tamanhos_disponiveis
 
 # --- Filtragem do DataFrame ---
 # O dataframe principal é filtrado com base nas seleções feitas na barra lateral.
@@ -54,7 +62,10 @@ if not df_filtrado.empty:
     total_registros = df_filtrado.shape[0]
     cargo_mais_frequente = df_filtrado["cargo"].mode()[0]
 else:
-    salario_medio, salario_mediano, salario_maximo, total_registros, cargo_mais_comum = 0, 0, 0, ""
+    salario_medio = 0
+    salario_maximo = 0
+    total_registros = 0
+    cargo_mais_frequente = ""
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Salário médio", f"${salario_medio:,.0f}")
