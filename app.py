@@ -18,27 +18,33 @@ st.sidebar.header("🔍 Filtros")
 
 # Filtro de Ano
 anos_disponiveis = sorted(df['ano'].unique())
-anos_selecionados = st.sidebar.multiselect("Ano", anos_disponiveis, default=anos_disponiveis)
+anos_selecionados = st.sidebar.multiselect("Ano", anos_disponiveis)
 if not anos_selecionados:
     anos_selecionados = anos_disponiveis
 
 # Filtro de Senioridade
 senioridades_disponiveis = sorted(df['senioridade'].unique())
-senioridades_selecionadas = st.sidebar.multiselect("Senioridade", senioridades_disponiveis, default=senioridades_disponiveis)
+senioridades_selecionadas = st.sidebar.multiselect("Senioridade", senioridades_disponiveis)
 if not senioridades_selecionadas:
     senioridades_selecionadas = senioridades_disponiveis
 
 # Filtro por Tipo de Contrato
 contratos_disponiveis = sorted(df['contrato'].unique())
-contratos_selecionados = st.sidebar.multiselect("Tipo de Contrato", contratos_disponiveis, default=contratos_disponiveis)
+contratos_selecionados = st.sidebar.multiselect("Tipo de Contrato", contratos_disponiveis)
 if not contratos_selecionados:
     contratos_selecionados = contratos_disponiveis
 
 # Filtro por Tamanho da Empresa
 tamanhos_disponiveis = sorted(df['tamanho_empresa'].unique())
-tamanhos_selecionados = st.sidebar.multiselect("Tamanho da Empresa", tamanhos_disponiveis, default=tamanhos_disponiveis)
+tamanhos_selecionados = st.sidebar.multiselect("Tamanho da Empresa", tamanhos_disponiveis)
 if not tamanhos_selecionados:
     tamanhos_selecionados = tamanhos_disponiveis
+
+# Filtro por Cargo
+cargos_disponiveis = sorted(df['cargo'].unique())
+cargos_selecionados = st.sidebar.multiselect("Cargos", cargos_disponiveis)
+if not cargos_selecionados:
+    cargos_selecionados = cargos_disponiveis
 
 # --- Filtragem do DataFrame ---
 # O dataframe principal é filtrado com base nas seleções feitas na barra lateral.
@@ -46,7 +52,8 @@ df_filtrado = df[
     (df['ano'].isin(anos_selecionados)) &
     (df['senioridade'].isin(senioridades_selecionadas)) &
     (df['contrato'].isin(contratos_selecionados)) &
-    (df['tamanho_empresa'].isin(tamanhos_selecionados))
+    (df['tamanho_empresa'].isin(tamanhos_selecionados)) &
+    (df['cargo'].isin(cargos_selecionados))
 ]
 
 # --- Conteúdo Principal ---
@@ -132,15 +139,43 @@ with col_graf3:
 with col_graf4:
     if not df_filtrado.empty:
         df_ds = df_filtrado[df_filtrado['cargo'] == 'Data Scientist']
-        media_ds_pais = df_ds.groupby('residencia_iso3')['usd'].mean().reset_index()
-        grafico_paises = px.choropleth(media_ds_pais,
-            locations='residencia_iso3',
-            color='usd',
-            color_continuous_scale='rdylgn',
-            title='Salário médio de Cientista de Dados por país',
-            labels={'usd': 'Salário médio (USD)', 'residencia_iso3': 'País'})
-        grafico_paises.update_layout(title_x=0.1)
-        st.plotly_chart(grafico_paises, use_container_width=True)
+        if not df_ds.empty:
+            media_ds_pais = df_ds.groupby('residencia_iso3')['usd'].mean().reset_index()
+            vmin = media_ds_pais['usd'].quantile(0.05)
+            vmax = media_ds_pais['usd'].quantile(0.95)
+            grafico_paises = px.choropleth(
+                media_ds_pais,
+                locations='residencia_iso3',
+                color='usd',
+                color_continuous_scale='YlGnBu',
+                range_color=(vmin, vmax),
+                projection='natural earth',
+                title='Salário médio de Cientista de Dados por país',
+                labels={'usd': 'Salário médio (USD)', 'residencia_iso3': 'País'},
+                hover_data={'usd': ':,.0f'}
+            )
+            grafico_paises.update_layout(
+                title_x=0.1,
+                margin=dict(l=0, r=0, t=50, b=0),
+                coloraxis_colorbar=dict(
+                    title='USD',
+                    tickprefix='$',
+                    tickformat=',.0f'
+                )
+            )
+            grafico_paises.update_geos(
+                showcoastlines=True,
+                coastlinecolor='rgba(0,0,0,0.4)',
+                showland=True,
+                landcolor='rgb(245,245,245)',
+                showocean=True,
+                oceancolor='rgb(225,236,250)',
+                showcountries=True,
+                countrycolor='rgba(0,0,0,0.3)'
+            )
+            st.plotly_chart(grafico_paises, use_container_width=True)
+        else:
+            st.warning("Nenhum dado para exibir no gráfico de países.")
     else:
         st.warning("Nenhum dado para exibir no gráfico de países.")
 
